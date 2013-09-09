@@ -14,19 +14,31 @@ func Handler() http.Handler {
 
 	m.Put("/data/:key", http.HandlerFunc(func(w http.ResponseWriter, request *http.Request) {
 		key := request.URL.Query().Get(":key")
-		body, _ := ioutil.ReadAll(request.Body)
-		value := string(body)
+		_, hasKey := data[key]
 
-		data[key] = value
+		if hasKey {
+			body, _ := ioutil.ReadAll(request.Body)
+			value := string(body)
 
-		w.WriteHeader(201)
+			data[key] = value
+
+			w.WriteHeader(201)
+		} else {
+			w.WriteHeader(400)
+		}
 	}))
 
 	m.Get("/data/:key", http.HandlerFunc(func(w http.ResponseWriter, request *http.Request) {
 		key := request.URL.Query().Get(":key")
 
-		w.WriteHeader(200)
-		io.WriteString(w, data[key])
+		value, hasKey := data[key]
+
+		if hasKey {
+			w.WriteHeader(200)
+			io.WriteString(w, value)
+		} else {
+			w.WriteHeader(404)
+		}
 	}))
 
 	return m
