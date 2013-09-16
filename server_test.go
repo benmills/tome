@@ -2,51 +2,45 @@ package tome
 
 import (
 	"github.com/benmills/telephone"
-	"github.com/benmills/quiz"
+	e "github.com/lionelbarrow/examples"
 
-	"testing"
 	"net/http/httptest"
+	"testing"
 )
 
 func testServer() *httptest.Server {
 	return httptest.NewServer(Handler())
 }
 
-func TestPuttingAKey(t *testing.T) {
-	test := quiz.Test(t)
-	server := testServer()
+func TestServer(t *testing.T) {
+	e.Describe("PUT /data/", t,
+		e.It("can put a value at a key", func(expect e.Expectation) {
+			server := testServer()
+			response := telephone.Put(server.URL+"/data/foo", "bar")
+			expect(response.StatusCode).ToEqual(201)
+		}),
 
-	response := telephone.Put(server.URL+"/data/foo", "bar")
+		e.It("will return an error if the key exists", func(expect e.Expectation) {
+			server := testServer()
+			telephone.Put(server.URL+"/data/foo", "bar")
+			response := telephone.Put(server.URL+"/data/foo", "bar")
+			expect(response.StatusCode).ToEqual(400)
+		}),
+	)
 
-	test.Expect(response.StatusCode).ToEqual(201)
-}
+	e.Describe("GET /data/", t,
+		e.It("get get a key", func(expect e.Expectation) {
+			server := testServer()
+			telephone.Put(server.URL+"/data/foo", "bar")
+			response := telephone.Get(server.URL + "/data/foo")
+			expect(response.StatusCode).ToEqual(200)
+			expect(response.ParsedBody).ToEqual("bar")
+		}),
 
-func TestPuttingAKeyThatAlreadyExists(t *testing.T) {
-	test := quiz.Test(t)
-	server := testServer()
-
-	telephone.Put(server.URL+"/data/foo", "bar")
-	response := telephone.Put(server.URL+"/data/foo", "bar")
-
-	test.Expect(response.StatusCode).ToEqual(400)
-}
-
-func TestGettingAKey(t *testing.T) {
-	test := quiz.Test(t)
-	server := testServer()
-
-	telephone.Put(server.URL+"/data/foo", "bar")
-	response := telephone.Get(server.URL+"/data/foo")
-
-	test.Expect(response.StatusCode).ToEqual(200)
-	test.Expect(response.ParsedBody).ToEqual("bar")
-}
-
-func TestGettingAnUnknownKey(t *testing.T) {
-	test := quiz.Test(t)
-	server := testServer()
-
-	response := telephone.Get(server.URL+"/data/unknown")
-
-	test.Expect(response.StatusCode).ToEqual(404)
+		e.It("will return an error if a key doesn't exist", func(expect e.Expectation) {
+			server := testServer()
+			response := telephone.Get(server.URL + "/data/foo")
+			expect(response.StatusCode).ToEqual(404)
+		}),
+	)
 }

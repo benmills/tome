@@ -3,9 +3,9 @@ package tome
 import (
 	"github.com/bmizerany/pat"
 
-	"net/http"
 	"io"
 	"io/ioutil"
+	"net/http"
 )
 
 func Handler() http.Handler {
@@ -16,7 +16,7 @@ func Handler() http.Handler {
 		key := request.URL.Query().Get(":key")
 		_, hasKey := data[key]
 
-		if hasKey {
+		if !hasKey {
 			body, _ := ioutil.ReadAll(request.Body)
 			value := string(body)
 
